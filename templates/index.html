@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - IWB Recycled Parts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1 0 auto;
+        }
+        footer {
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Header -->
+    <header class="bg-green-600 text-white">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Cloude Recycled Parts</h1>
+            <nav class="space-x-4">
+                <!-- Debug: Session state -->
+                <!-- Session: username={{ session.username|default('None') }}, user_type={{ session.user_type|default('None') }} -->
+                {% if session.username %}
+                    {% if session.user_type == 'customer' %}
+                        <a href="{{ url_for('query') }}" class="hover:text-green-200">Query</a>
+                        <a href="{{ url_for('cart') }}" class="hover:text-green-200">Cart</a>
+                        <a href="{{ url_for('card') }}" class="hover:text-green-200">Manage Cards</a>
+                        <a href="{{ url_for('logout') }}" class="hover:text-green-200">Logout ({{ session.username }})</a>
+                    {% elif session.user_type in ['sales', 'finance', 'developer', 'investor'] %}
+                        {% if session.user_type == 'sales' %}
+                            <a href="{{ url_for('sales') }}" class="hover:text-green-200">Sales</a>
+                            <a href="{{ url_for('query') }}" class="hover:text-green-200">Query</a>
+                        {% endif %}
+                        {% if session.user_type == 'finance' %}
+                            <a href="{{ url_for('income_statement') }}" class="hover:text-green-200">Income Statement</a>
+                        {% endif %}
+                        {% if session.user_type == 'developer' %}
+                            <a href="{{ url_for('manage_products') }}" class="hover:text-green-200">Manage Products</a>
+                            <a href="{{ url_for('backup') }}" class="hover:text-green-200">Backup</a>
+                        {% endif %}
+                        {% if session.user_type == 'investor' %}
+                            <a href="{{ url_for('income_statement') }}" class="hover:text-green-200">Income Statement</a>
+                        {% endif %}
+                        <a href="{{ url_for('logout') }}" class="hover:text-green-200">Logout ({{ session.username }})</a>
+                    {% else %}
+                        <span class="text-red-200">Error: Invalid user type ({{ session.user_type|default('None') }})</span>
+                        <a href="{{ url_for('logout') }}" class="hover:text-green-200">Logout ({{ session.username }})</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="hover:text-green-200">Login</a>
+                    <a href="{{ url_for('register') }}" class="hover:text-green-200">Register</a>
+                    <a href="{{ url_for('query') }}" class="hover:text-green-200">Query</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4 p-4 rounded {% if category == 'message' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                    {% for category, message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Welcome Message -->
+        <section class="mb-8">
+            {% if session.username %}
+                {% if session.user_type == 'customer' %}
+                    <p class="text-lg">Molweni, {{ session.username }}! Check out our stock of new and second-hand parts and select items for your cart.</p>
+                {% elif session.user_type in ['sales', 'finance', 'developer', 'investor'] %}
+                    <p class="text-lg">Sanbonani, {{ session.username }}! Manage IWB operations as {{ session.user_type }}.</p>
+                {% else %}
+                    <p class="text-lg text-red-700">Welcome, {{ session.username }}! Error: Invalid user type ({{ session.user_type|default('None') }}).</p>
+                {% endif %}
+            {% else %}
+                <p class="text-lg">Welcome to Cloude, To Purchase our products you must be is_logged_in first.</p>
+            {% endif %}
+        </section>
+
+        <!-- Products Grid -->
+        <section>
+            <h2 class="text-2xl font-semibold mb-6">Our Available Products</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for product in products %}
+                    <!-- Generate image filename -->
+                    {% set image_name = product[1] | replace(' ', '_') + '_' + (product[2] | capitalize) + '.jpg' %}
+                    {% set image_url = url_for('static', filename='images/' + image_name) %}
+                    <!-- Fallback image if missing -->
+                    {% set fallback_image = url_for('static', filename='images/fallback.jpg') %}
+                    <div class="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                        <div class="relative overflow-hidden">
+                            <img src="{{ image_url }}" alt="{{ product[1] }}" class="h-40 w-full object-cover rounded-t-lg transform hover:scale-105 transition-transform duration-300"
+                                 onerror="this.src='{{ fallback_image }}'">
+                            <span class="absolute top-2 right-2 {% if product[2] == 'new' %}bg-blue-100 text-blue-800{% else %}bg-green-100 text-green-800{% endif %} px-2 py-1 rounded text-sm">
+                                {{ product[2] | capitalize }}
+                            </span>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-lg font-medium text-gray-800">{{ product[1] }}</h3>
+                            <p class="text-sm text-gray-600">{{ product[3] }}</p>
+                            <p class="text-lg font-semibold text-green-600 mt-2">M{{ "%.2f" | format(product[4]) }}</p>
+                            <p class="text-sm text-gray-600">Available: {{ product[5] }}</p>
+                            {% if is_logged_in and session.user_type == 'customer' %}
+                                <form action="{{ url_for('cart') }}" method="post" class="mt-4 flex items-center space-x-2">
+                                    <input type="hidden" name="action" value="add">
+                                    <input type="hidden" name="product_id" value="{{ product[0] }}">
+                                    <input type="number" name="quantity" value="1" min="1" max="{{ product[5] }}"
+                                           class="w-16 p-2 border rounded">
+                                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                                        Add to Cart
+                                    </button>
+                                </form>
+                            {% else %}
+                                <div class="mt-4">
+                                    <a href="{{ url_for('login') }}" class="text-blue-600 hover:underline">
+                                        Login to Add to Cart
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-4">
+        <p>© 2025 IWB Recycled Parts. All rights reserved.</p>
+    </footer>
+</body>
+</html>

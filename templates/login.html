@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Cloude Recycled Parts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1 0 auto;
+        }
+        footer {
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Header -->
+    <header class="bg-green-600 text-white">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Cloude Recycled Parts</h1>
+            <nav class="space-x-4">
+                <!-- Debug: Session state -->
+                <!-- Session: username={{ session.username|default('None') }}, user_type={{ session.user_type|default('None') }} -->
+                {% if session.username %}
+                    {% if session.user_type == 'customer' %}
+                        <a href="{{ url_for('query') }}" class="hover:text-green-200">Query</a>
+                        <a href="{{ url_for('cart') }}" class="hover:text-green-200">Cart</a>
+                        <a href="{{ url_for('card') }}" class="hover:text-green-200">Manage Cards</a>
+                        <a href="{{ url_for('logout') }}" class="hover:text-green-200">Logout ({{ session.username }})</a>
+                    {% elif session.user_type in ['sales', 'finance', 'developer', 'investor'] %}
+                        {% if session.user_type == 'sales' %}
+                            <a href="{{ url_for('sales') }}" class="hover:text-green-200">Sales</a>
+                            <a href="{{ url_for('query') }}" class="hover:text-green-200">Query</a>
+                        {% endif %}
+                        {% if session.user_type == 'finance' %}
+                            <a href="{{ url_for('income_statement') }}" class="hover:text-green-200">Income Statement</a>
+                        {% endif %}
+                        {% if session.user_type == 'developer' %}
+                            <a href="{{ url_for('products') }}" class="hover:text-green-200">Manage Products</a>
+                            <a href="{{ url_for('backup') }}" class="hover:text-green-200">Backup</a>
+                        {% endif %}
+                        {% if session.user_type == 'investor' %}
+                            <a href="{{ url_for('income_statement') }}" class="hover:text-green-200">Income Statement</a>
+                        {% endif %}
+                        <a href="{{ url_for('logout') }}" class="hover:text-green-200">Logout ({{ session.username }})</a>
+                    {% else %}
+                        <span class="text-red-200">Error: Invalid user type ({{ session.user_type|default('None') }})</span>
+                        <a href="{{ url_for('logout') }}" class="hover:text-green-200">Logout ({{ session.username }})</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="hover:text-green-200">Login</a>
+                    <a href="{{ url_for('register') }}" class="hover:text-green-200">Register</a>
+                    <a href="{{ url_for('query') }}" class="hover:text-green-200">Query</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4 p-4 rounded {% if category == 'message' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                    {% for category, message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <h1 class="text-2xl font-bold mb-4">Login</h1>
+        <form method="POST" class="bg-white p-6 rounded shadow max-w-md">
+            <div class="mb-4">
+                <label class="block text-gray-700">Username</label>
+                <input type="text" name="username" class="w-full p-2 border rounded" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700">Password</label>
+                <input type="password" name="password" class="w-full p-2 border rounded" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700">User Type</label>
+                <select name="user_type" class="w-full p-2 border rounded" required>
+                    <option value="admin">Admin (Staff)</option>
+                    <option value="customer">Customer</option>
+                </select>
+            </div>
+            <button type="submit" class="bg-green-600 text-white p-2 rounded hover:bg-green-700 w-full">Login</button>
+        </form>
+        <p class="mt-4">Don't have an account? <a href="{{ url_for('register') }}" class="text-green-600 hover:underline">Register here</a>.</p>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-4">
+        <p>© 2025 IWB Recycled Parts. All rights reserved.</p>
+    </footer>
+</body>
+</html>

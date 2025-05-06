@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income Statement - Cloude Recycled Parts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1 0 auto;
+        }
+        footer {
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Header -->
+    <header class="bg-green-600 text-white">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Cloude Recycled Parts</h1>
+            <nav class="space-x-4">
+                {% if session.username %}
+                    {% if session.user_type in ['finance', 'investor'] %}
+                        {% if session.user_type == 'finance' %}
+                            <a href="{{ url_for('income_statement') }}" class="hover:text-green-200">Income Statement</a>
+                        {% endif %}
+                        {% if session.user_type == 'investor' %}
+                            <a href="{{ url_for('income_statement') }}" class="hover:text-green-200">Income Statement</a>
+                        {% endif %}
+                        <a href="{{ url_for('logout') }}" class="hover:text-green-200">Logout ({{ session.username }})</a>
+                    {% else %}
+                        <span class="text-red-200">Error: Invalid user type ({{ session.user_type|default('None') }})</span>
+                        <a href="{{ url_for('logout') }}" class="hover:text-green-200">Logout ({{ session.username }})</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="hover:text-green-200">Login</a>
+                    <a href="{{ url_for('register') }}" class="hover:text-green-200">Register</a>
+                    <a href="{{ url_for('query') }}" class="hover:text-green-200">Query</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4 p-4 rounded {% if category == 'message' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                    {% for category, message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <h1 class="text-2xl font-bold mb-4">Income Statement</h1>
+
+        <!-- Income Statements Table -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Financial Summary</h2>
+            {% if statements %}
+                <table class="w-full bg-white rounded shadow mb-8">
+                    <tr class="bg-gray-200">
+                        <th class="p-2">Month</th>
+                        <th class="p-2">Revenue</th>
+                        <th class="p-2">Expenses</th>
+                        <th class="p-2">Profit</th>
+                    </tr>
+                    {% for statement in statements %}
+                        <tr>
+                            <td class="p-2">{{ statement[0] }}</td>
+                            <td class="p-2">M{{ "%.2f" | format(statement[1]) }}</td>
+                            <td class="p-2">M{{ "%.2f" | format(statement[2]) }}</td>
+                            <td class="p-2">M{{ "%.2f" | format(statement[3]) }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p class="text-lg">No income statements available.</p>
+            {% endif %}
+        </section>
+
+        <!-- Generate New Statement (Finance Only) -->
+        {% if session.user_type == 'finance' %}
+            <section class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">Generate New Statement</h2>
+                <form action="{{ url_for('generate_statement') }}" method="post" class="bg-white p-6 rounded shadow">
+                    <div class="mb-4">
+                        <label for="month" class="block text-gray-700">Month (YYYY-MM):</label>
+                        <input type="text" name="month" id="month" placeholder="e.g., 2025-01" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="revenue" class="block text-gray-700">Revenue (M):</label>
+                        <input type="number" step="0.01" name="revenue" id="revenue" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="expenses" class="block text-gray-700">Expenses (M):</label>
+                        <input type="number" step="0.01" name="expenses" id="expenses" class="w-full p-2 border rounded" required>
+                    </div>
+                    <button type="submit" class="bg-green-600 text-white p-2 rounded hover:bg-green-700">Generate Statement</button>
+                </form>
+            </section>
+        {% endif %}
+
+        <!-- Charts -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Financial Charts</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-4 rounded shadow">
+                    <h3 class="text-lg font-medium mb-2">Monthly Profit</h3>
+                    <img src="data:image/png;base64,{{ profit_url }}" alt="Monthly Profit Chart" class="w-full">
+                </div>
+                <div class="bg-white p-4 rounded shadow">
+                    <h3 class="text-lg font-medium mb-2">Revenue vs Expenses</h3>
+                    <img src="data:image/png;base64,{{ rev_exp_url }}" alt="Revenue vs Expenses Chart" class="w-full">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-4">
+        <p>© 2025 IWB Recycled Parts. All rights reserved.</p>
+    </footer>
+</body>
+</html>

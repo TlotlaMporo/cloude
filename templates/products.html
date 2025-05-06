@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Products</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-blue-600 p-4">
+        <div class="container mx-auto flex justify-between">
+            <a href="/" class="text-white text-lg font-bold">Cloude</a>
+            <div>
+                <a href="/products" class="text-white mr-4">Products</a>
+                <a href="/logout" class="text-white">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container mx-auto mt-8">
+        <h1 class="text-2xl font-bold mb-4">Manage Products</h1>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <!-- Form to Add a Product -->
+        <form method="POST" class="bg-white p-6 rounded shadow mb-8">
+            <input type="hidden" name="action" value="add">
+            <div class="mb-4">
+                <label class="block text-gray-700">Name</label>
+                <input type="text" name="name" class="w-full p-2 border rounded" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700">Type</label>
+                <select name="type" class="w-full p-2 border rounded">
+                    <option value="RAM">RAM</option>
+                    <option value="Hard Drive">Hard Drive</option>
+                    <option value="Motherboard Component">Motherboard Component</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700">Price (M)</label>
+                <input type="number" name="price" step="0.01" class="w-full p-2 border rounded" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700">Quantity</label>
+                <input type="number" name="quantity" class="w-full p-2 border rounded" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700">Condition</label>
+                <select name="condition" class="w-full p-2 border rounded">
+                    <option value="new">New</option>
+                    <option value="pre-used">Pre-used</option>
+                </select>
+            </div>
+            <button type="submit" class="bg-blue-600 text-white p-2 rounded">Add Product</button>
+        </form>
+        <!-- Products Table -->
+        <h2 class="text-xl font-semibold mb-4">Products</h2>
+        <table class="w-full bg-white rounded shadow">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="p-2">Name</th>
+                    <th class="p-2">Type</th>
+                    <th class="p-2">Price (M)</th>
+                    <th class="p-2">Quantity</th>
+                    <th class="p-2">Condition</th>
+                    <th class="p-2">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td class="p-2">{{ product[1] }}</td>
+                        <td class="p-2">{{ product[2] }}</td>
+                        <td class="p-2">{{ product[3] }}</td>
+                        <td class="p-2">{{ product[5] }}</td>
+                        <td class="p-2">{{ product[6] }}</td>
+                        <td class="p-2">
+                            <!-- Update Button (opens modal) -->
+                            <button onclick="openUpdateModal('{{ product[0] }}', '{{ product[1] }}', '{{ product[2] }}', '{{ product[3] }}', '{{ product[5] }}', '{{ product[6] }}')"
+                                    class="bg-yellow-500 text-white p-1 rounded mr-2">Update</button>
+                            <!-- Delete Form -->
+                            <form method="POST" style="display:inline;">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="product_id" value="{{ product[0] }}">
+                                <button type="submit" onclick="return confirm('Are you sure you want to delete this product?')"
+                                        class="bg-red-500 text-white p-1 rounded">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Update Modal -->
+    <div id="updateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded shadow w-1/2">
+            <h2 class="text-xl font-semibold mb-4">Update Product</h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="product_id" id="updateProductId">
+                <div class="mb-4">
+                    <label class="block text-gray-700">Name</label>
+                    <input type="text" name="name" id="updateName" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700">Type</label>
+                    <select name="type" id="updateType" class="w-full p-2 border rounded">
+                        <option value="RAM">RAM</option>
+                        <option value="Hard Drive">Hard Drive</option>
+                        <option value="Motherboard Component">Motherboard Component</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700">Price (M)</label>
+                    <input type="number" name="price" id="updatePrice" step="0.01" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700">Quantity</label>
+                    <input type="number" name="quantity" id="updateQuantity" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700">Condition</label>
+                    <select name="condition" id="updateCondition" class="w-full p-2 border rounded">
+                        <option value="new">New</option>
+                        <option value="pre-used">Pre-used</option>
+                    </select>
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" onclick="closeUpdateModal()" class="bg-gray-500 text-white p-2 rounded mr-2">Cancel</button>
+                    <button type="submit" class="bg-green-600 text-white p-2 rounded">Update Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openUpdateModal(id, name, type, price, quantity, condition) {
+            document.getElementById('updateProductId').value = id;
+            document.getElementById('updateName').value = name;
+            document.getElementById('updateType').value = type;
+            document.getElementById('updatePrice').value = price;
+            document.getElementById('updateQuantity').value = quantity;
+            document.getElementById('updateCondition').value = condition;
+            document.getElementById('updateModal').classList.remove('hidden');
+        }
+
+        function closeUpdateModal() {
+            document.getElementById('updateModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
